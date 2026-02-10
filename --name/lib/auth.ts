@@ -1,23 +1,28 @@
-import { jwtDecode } from "jwt-decode";
+export const isLoggedIn = () => {
+  // Check if we're in the browser environment
+  if (typeof window === "undefined") {
+    return false;
+  }
+  return !!localStorage.getItem("token");
+};
 
-export const saveToken = (token: string) => {
+export const getToken = () => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  return localStorage.getItem("token");
+};
+
+export const setToken = (token: string) => {
+  if (typeof window === "undefined") {
+    return;
+  }
   localStorage.setItem("token", token);
 };
 
 export const removeToken = () => {
-  localStorage.removeItem("token");
-};
-
-export const getUserFromToken = () => {
-  const token = localStorage.getItem("token");
-  if (!token) return null;
-  try {
-    return jwtDecode(token);
-  } catch {
-    return null;
+  if (typeof window === "undefined") {
+    return;
   }
-};
-
-export const isLoggedIn = () => {
-  return !!localStorage.getItem("token");
+  localStorage.removeItem("token");
 };
