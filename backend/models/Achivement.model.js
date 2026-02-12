@@ -111,12 +111,12 @@ const achievementSchema = new mongoose.Schema({
 
   // References
   event: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.String,
     ref: "Event"
   },
 
   course: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.String,
     ref: "Course"
   },
 
@@ -226,7 +226,7 @@ achievementSchema.pre("save", function(next) {
   }
 
   this.updatedAt = Date.now();
-  next();
+  // next();
 });
 
 // Method to verify achievement

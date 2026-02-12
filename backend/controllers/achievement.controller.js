@@ -214,7 +214,7 @@ exports.createAchievement = async (req, res) => {
     /* =========================
        1. RESOLVE TARGET USER
     ========================== */
-    const currentUserId = req.user?._id?.toString();
+    const currentUserId = req.user?.id?.toString();
     const targetUserId = req.body.user || currentUserId;
 
     const user = await User.findById(targetUserId);

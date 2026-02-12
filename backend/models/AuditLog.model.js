@@ -124,7 +124,7 @@ auditLogSchema.pre("save", async function(next) {
       console.error("Error caching user info:", error);
     }
   }
-  next();
+  // next();
 });
 
 // Static method to log an action
