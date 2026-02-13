@@ -45,8 +45,8 @@ const userSchema = new mongoose.Schema({
   year: {
     type: String,
     required: [true, "Year is required"],
-    enum: ["First", "Second", "Third", "Fourth", "Fifth", "Graduated"],
-    default: "First"
+    enum: ["First Year", "Second Year", "Third Year", "Fourth Year", "Fifth Year", "Graduated"],
+    default: "First Year"
   },
 
   phone: {

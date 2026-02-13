@@ -51,7 +51,7 @@ export default function Dashboard() {
 
   const fetchDashboard = async () => {
     try {
-      const res = await API.get("/dashboard");
+      const res = await API.get("/api/dashboard/user");
       setData(res.data.data);
     } catch (error) {
       console.error("Error fetching dashboard:", error);

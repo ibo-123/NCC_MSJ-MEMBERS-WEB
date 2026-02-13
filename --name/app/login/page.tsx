@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import API from "@/lib/api";
-import { saveToken } from "@/lib/auth";
+import { setToken } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
@@ -29,7 +29,7 @@ export default function Login() {
     try {
       const res = await API.post("/auth/login", data);
       const token = res.data.data.token;
-      saveToken(token);
+      setToken(token);
       router.push("/dashboard");
     } catch (err: any) {
       const errorMessage =

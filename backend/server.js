@@ -7,6 +7,7 @@ const compression = require("compression");
 require("dotenv").config();
 
 const app = express();
+const dashboardRoutes = require('./routes/dashboardRoutes');
 const PORT = process.env.PORT || 3000;
 
 // IMPORTANT: Custom sanitization function to avoid the express-mongo-sanitize bug
@@ -67,8 +68,8 @@ app.use(helmet({
     }
   },
   crossOriginEmbedderPolicy: false
-}));
 
+}));
 // CORS Configuration
 const corsOptions = {
   origin: process.env.FRONTEND_URL || "http://localhost:3000",
@@ -113,6 +114,7 @@ app.use("/api/auth", require("./routes/auth.routes"));
 app.use("/api/users", require("./routes/user.routes"));
 app.use("/api/courses", require("./routes/course.routes"));
 app.use("/api/attendance", require("./routes/attendance.routes"));
+app.use('/api/dashboard', dashboardRoutes);
 app.use("/api/achievements", require("./routes/achievement.routes"));
 
 // 404 Handler

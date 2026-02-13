@@ -1,8 +1,8 @@
 const User = require("../models/User.model");
-const Course = require("../models/Course.model");
+const Course = require("../models/course.model");
 const Attendance = require("../models/Attendance.model");
-const Achievement = require("../models/Achievement.model");
-const Event = require("../models/Event.model");
+const Achievement = require("../models/Achivement.model");
+const Event = require("../models/event.model");
 
 // @desc    Get admin dashboard statistics
 // @route   GET /api/dashboard/admin
@@ -333,6 +333,7 @@ exports.getAdminDashboard = async (req, res) => {
     });
   }
 };
+
 
 // @desc    Get user dashboard statistics
 // @route   GET /api/dashboard/user
