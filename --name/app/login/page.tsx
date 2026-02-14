@@ -5,7 +5,7 @@ import API from "@/lib/api";
 import { setToken } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 type LoginForm = {
   email: string;
@@ -21,6 +21,12 @@ export default function Login() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  // Fix hydration issues by only rendering dynamic content after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const onSubmit = async (data: LoginForm) => {
     setIsLoading(true);
@@ -40,6 +46,33 @@ export default function Login() {
       setIsLoading(false);
     }
   };
+
+  // Generate static background elements that won't change between server and client
+  const backgroundElements = mounted
+    ? [...Array(10)].map((_, i) => {
+        // Generate consistent values based on index
+        const left = ((i * 13) % 90) + 5; // 5-95%
+        const top = ((i * 17) % 90) + 5; // 5-95%
+        const duration = 3 + (i % 5); // 3-8s
+        const delay = (i % 20) / 10; // 0-2s
+        const value = i % 2 === 0 ? "1" : "0"; // Alternate between 1 and 0
+
+        return (
+          <div
+            key={i}
+            className="absolute font-mono text-green-900/10 text-xl animate-pulse"
+            style={{
+              left: `${left}%`,
+              top: `${top}%`,
+              animationDuration: `${duration}s`,
+              animationDelay: `${delay}s`,
+            }}
+          >
+            {value}
+          </div>
+        );
+      })
+    : null; // Don't render on server
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-black to-gray-900 p-4">
@@ -268,23 +301,12 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Background Elements */}
-        <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-          {[...Array(10)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute font-mono text-green-900/10 text-xl animate-pulse"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDuration: `${3 + Math.random() * 5}s`,
-                animationDelay: `${Math.random() * 2}s`,
-              }}
-            >
-              {Math.random() > 0.5 ? "1" : "0"}
-            </div>
-          ))}
-        </div>
+        {/* Background Elements - Now with hydration fix */}
+        {mounted && (
+          <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+            {backgroundElements}
+          </div>
+        )}
       </div>
     </div>
   );
