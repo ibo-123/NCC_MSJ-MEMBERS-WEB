@@ -6,11 +6,20 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "../../app/hooks/useAuth";
 
+/**
+ * @typedef {Object} NavLink
+ * @property {string} href  
+ * @property {string} label
+ * @property {boolean} [auth]
+ * @property {boolean} [admin]
+ */
+
 export default function Navbar() {
   const pathname = usePathname();
   const { user, logout, isAuthenticated, isAdmin } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
 
+  /** @type {NavLink[]} */  
   const navLinks = [
     { href: "/", label: "Home" },
     { href: "/dashboard", label: "Dashboard", auth: true },
@@ -68,10 +77,10 @@ export default function Navbar() {
                 >
                   <div className="hidden md:block text-right">
                     <p className="text-sm font-medium text-white">
-                      {use?.name}
+                      {user?.name}
                     </p>
                     <p className="text-xs text-green-400 capitalize">
-                      {use?.role}
+                      {user?.role}
                     </p>
                   </div>
                   <div className="w-10 h-10 bg-gradient-to-br from-green-700 to-emerald-600 rounded-full flex items-center justify-center">

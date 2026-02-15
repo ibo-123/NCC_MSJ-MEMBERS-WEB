@@ -1,12 +1,41 @@
-// hooks/useAuth.js
+// app/hooks/useAuth.js
 "use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { isLoggedIn, getToken, removeToken, setToken } from "@/lib/auth";
 
+/**
+ * @typedef {Object} User
+ * @property {string} _id
+ * @property {string} name
+ * @property {string} email
+ * @property {string} studentId
+ * @property {string} department
+ * @property {string} year
+ * @property {'admin' | 'member'} role
+ * @property {'Active' | 'Inactive' | 'Suspended'} status
+ * @property {number} [activeness]
+ * @property {string} [lastLogin]
+ * @property {string} createdAt
+ */
+
+/**
+ * @typedef {Object} AuthReturn
+ * @property {User | null} user
+ * @property {boolean} loading
+ * @property {function(string, User): void} login
+ * @property {function(): void} logout
+ * @property {function(User): void} updateUser
+ * @property {boolean} isAuthenticated
+ * @property {boolean} isAdmin
+ */
+
+/**
+ * @returns {AuthReturn}
+ */
 export function useAuth() {
-  const [user, setUserState] = useState(null);
+  const [user, setUserState] = useState(/** @type {User | null} */ (null));
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -21,25 +50,14 @@ export function useAuth() {
         return;
       }
 
-      // Get user data from localStorage or decode from token
       const userData = localStorage.getItem("user");
       if (userData) {
-        setUserState(JSON.parse(userData));
-      } else {
-        // Fetch user data from API using token
         try {
-          const response = await fetch("/api/auth/me", {
-            headers: {
-              Authorization: `Bearer ${getToken()}`,
-            },
-          });
-          const data = await response.json();
-          if (data.success) {
-            setUserState(data.data);
-            localStorage.setItem("user", JSON.stringify(data.data));
-          }
-        } catch (error) {
-          console.error("Error fetching user:", error);
+          /** @type {User} */
+          const parsedUser = JSON.parse(userData);
+          setUserState(parsedUser);
+        } catch (e) {
+          localStorage.removeItem("user");
         }
       }
     } catch (error) {
@@ -49,6 +67,10 @@ export function useAuth() {
     }
   };
 
+  /**
+   * @param {string} token
+   * @param {User} userData
+   */
   const login = (token, userData) => {
     setToken(token);
     localStorage.setItem("user", JSON.stringify(userData));
@@ -62,13 +84,16 @@ export function useAuth() {
     router.push("/login");
   };
 
+  /**
+   * @param {User} userData
+   */
   const updateUser = (userData) => {
     localStorage.setItem("user", JSON.stringify(userData));
     setUserState(userData);
   };
 
   return {
-    use,
+    user,
     loading,
     login,
     logout,
