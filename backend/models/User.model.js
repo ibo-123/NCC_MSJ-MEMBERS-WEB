@@ -121,11 +121,14 @@ const userSchema = new mongoose.Schema({
   passwordResetExpires: Date,
 
   lastLogin: Date,
+  lastActivity: Date,
   loginAttempts: {
     type: Number,
     default: 0
   },
   lockUntil: Date,
+
+  passwordChangedAt: Date,
 
   // Timestamps
   createdAt: {

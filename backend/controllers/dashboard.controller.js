@@ -268,7 +268,7 @@ exports.getAdminDashboard = async (req, res) => {
       ])
     ]);
 
-    // Process attendance statistics
+    // Process attendance statistics with caching-friendly format
     const todayAttendanceObj = todayAttendance.reduce((acc, curr) => {
       acc[curr._id] = curr.count;
       return acc;
@@ -276,7 +276,7 @@ exports.getAdminDashboard = async (req, res) => {
 
     const weeklyAttendance = attendanceStats[0].weekly[0] || { present: 0, total: 0 };
     const weeklyAttendanceRate = weeklyAttendance.total > 0 
-      ? (weeklyAttendance.present / weeklyAttendance.total) * 100 
+      ? Math.round((weeklyAttendance.present / weeklyAttendance.total) * 100 * 100) / 100
       : 0;
 
     // Format response data

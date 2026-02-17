@@ -245,6 +245,22 @@ exports.checkOwnership = (modelName, idParam = "id", userField = "user") => {
 // @desc    Rate limiting middleware
 exports.rateLimit = (maxRequests = 100, windowMinutes = 15) => {
   const requests = new Map();
+  
+  // Cleanup interval to prevent memory leaks
+  const cleanupInterval = setInterval(() => {
+    const now = Date.now();
+    const windowMs = windowMinutes * 60 * 1000;
+    
+    for (const [ip, times] of requests.entries()) {
+      const recentRequests = times.filter(time => now - time < windowMs);
+      
+      if (recentRequests.length === 0) {
+        requests.delete(ip);
+      } else {
+        requests.set(ip, recentRequests);
+      }
+    }
+  }, 60000); // Cleanup every minute
 
   return (req, res, next) => {
     const ip = req.ip || req.connection.remoteAddress;
@@ -255,26 +271,36 @@ exports.rateLimit = (maxRequests = 100, windowMinutes = 15) => {
       requests.set(ip, []);
     }
 
-    const userRequests = requests.get(ip);
+    let userRequests = requests.get(ip);
     
     // Remove old requests
-    const recentRequests = userRequests.filter(time => now - time < windowMs);
-    requests.set(ip, recentRequests);
-
+    userRequests = userRequests.filter(time => now - time < windowMs);
+    
     // Check if rate limit exceeded
-    if (recentRequests.length >= maxRequests) {
-      return res.status(429).json({
-        success: false,
-        message: "Too many requests. Please try again later."
-      });
+    if (userRequests.length >= maxRequests) {
+      const oldestRequest = Math.min(...userRequests);
+      const resetTime = new Date(oldestRequest + windowMs);
+      const retryAfter = Math.ceil((resetTime - now) / 1000);
+
+      return res.status(429)
+        .set('Retry-After', retryAfter)
+        .set('X-RateLimit-Limit', maxRequests)
+        .set('X-RateLimit-Remaining', '0')
+        .set('X-RateLimit-Reset', resetTime.toISOString())
+        .json({
+          success: false,
+          message: `Too many requests. Please try again in ${retryAfter} seconds.`,
+          retryAfter: retryAfter
+        });
     }
 
     // Add current request
-    recentRequests.push(now);
+    userRequests.push(now);
+    requests.set(ip, userRequests);
 
-    // Set headers
+    // Set rate limit headers
     res.setHeader('X-RateLimit-Limit', maxRequests);
-    res.setHeader('X-RateLimit-Remaining', maxRequests - recentRequests.length);
+    res.setHeader('X-RateLimit-Remaining', Math.max(0, maxRequests - userRequests.length));
     res.setHeader('X-RateLimit-Reset', new Date(now + windowMs).toISOString());
 
     next();

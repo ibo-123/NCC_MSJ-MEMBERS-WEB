@@ -7,9 +7,14 @@ const bcrypt = require("bcryptjs");
 // @access  Private/Admin
 exports.getAllUsers = async (req, res) => {
   try {
-    // Pagination
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    // Pagination with safety limits
+    let page = parseInt(req.query.page) || 1;
+    let limit = parseInt(req.query.limit) || 10;
+    
+    // Enforce maximum limits to prevent excessive queries
+    if (limit > 100) limit = 100;
+    if (page < 1) page = 1;
+    
     const skip = (page - 1) * limit;
 
     // Filters

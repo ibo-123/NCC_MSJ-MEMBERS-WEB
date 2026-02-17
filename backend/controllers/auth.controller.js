@@ -21,7 +21,36 @@ exports.register = async (req, res) => {
     if (!name || !email || !password || !studentId || !department || !year) {
       return res.status(400).json({
         success: false,
-        message: "Please provide all required fields"
+        message: "All fields (name, email, password, studentId, department, year) are required"
+      });
+    }
+
+    // Validate input formats
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid email format"
+      });
+    }
+
+    if (name.trim().length < 2 || name.trim().length > 100) {
+      return res.status(400).json({
+        success: false,
+        message: "Name must be between 2 and 100 characters"
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters long"
+      });
+    }
+
+    if (!/^[A-Z0-9]+$/.test(studentId.trim())) {
+      return res.status(400).json({
+        success: false,
+        message: "Student ID must contain only uppercase letters and numbers"
       });
     }
 
@@ -115,7 +144,15 @@ exports.login = async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: "Please provide email and password"
+        message: "Email and password are required"
+      });
+    }
+
+    // Validate email format
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid email format"
       });
     }
 
@@ -129,11 +166,32 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Check if account is locked
+    // Check if account is locked BEFORE checking password
     if (user.isLocked()) {
       return res.status(423).json({
         success: false,
-        message: "Account is locked. Try again later."
+        message: "Account is locked due to too many failed login attempts. Please try again later or contact support.",
+        lockUntil: user.lockUntil
+      });
+    }
+
+    // Check if account is active
+    if (user.status !== "Active") {
+      await AuditLog.log({
+        userId: user._id,
+        action: "login",
+        resource: "User",
+        resourceId: user._id,
+        resourceName: user.name,
+        status: "failure",
+        errorMessage: `Account is ${user.status}`,
+        ipAddress: req.ip,
+        userAgent: req.get("user-agent")
+      });
+
+      return res.status(403).json({
+        success: false,
+        message: `Your account is ${user.status.toLowerCase()}. Please contact an administrator.`
       });
     }
 
@@ -144,6 +202,18 @@ exports.login = async (req, res) => {
       // Increment login attempts
       await user.incLoginAttempts();
       
+      await AuditLog.log({
+        userId: user._id,
+        action: "login",
+        resource: "User",
+        resourceId: user._id,
+        resourceName: user.name,
+        status: "failure",
+        errorMessage: "Invalid password",
+        ipAddress: req.ip,
+        userAgent: req.get("user-agent")
+      });
+      
       return res.status(401).json({
         success: false,
         message: "Invalid credentials"
@@ -153,20 +223,22 @@ exports.login = async (req, res) => {
     // Reset login attempts on successful login
     await user.resetLoginAttempts();
 
-    // Update last login
+    // Update last login and last activity
     user.lastLogin = Date.now();
-    await user.save();
+    user.lastActivity = Date.now();
+    await user.save({ validateBeforeSave: false });
 
     // Generate token
     const token = generateToken(user._id, user.role);
 
-    // Log the login
+    // Log the successful login
     await AuditLog.log({
       userId: user._id,
       action: "login",
       resource: "User",
       resourceId: user._id,
       resourceName: user.name,
+      status: "success",
       ipAddress: req.ip,
       userAgent: req.get("user-agent")
     });
@@ -181,6 +253,7 @@ exports.login = async (req, res) => {
         studentId: user.studentId,
         department: user.department,
         role: user.role,
+        status: user.status,
         token
       }
     });
@@ -188,7 +261,7 @@ exports.login = async (req, res) => {
     console.error("Login error:", error);
     res.status(500).json({
       success: false,
-      message: "Login failed"
+      message: "An error occurred during login. Please try again later."
     });
   }
 };
@@ -260,6 +333,33 @@ exports.updateDetails = async (req, res) => {
       fieldsToUpdate[key] === undefined && delete fieldsToUpdate[key]
     );
 
+    // Validate name if provided
+    if (fieldsToUpdate.name) {
+      if (fieldsToUpdate.name.trim().length < 2 || fieldsToUpdate.name.trim().length > 100) {
+        return res.status(400).json({
+          success: false,
+          message: "Name must be between 2 and 100 characters"
+        });
+      }
+      fieldsToUpdate.name = fieldsToUpdate.name.trim();
+    }
+
+    // Validate phone if provided
+    if (fieldsToUpdate.phone && !/^[0-9]{10}$/.test(fieldsToUpdate.phone.replace(/\D/g, ''))) {
+      return res.status(400).json({
+        success: false,
+        message: "Phone number must be 10 digits"
+      });
+    }
+
+    // Validate bio length
+    if (fieldsToUpdate.bio && fieldsToUpdate.bio.length > 500) {
+      return res.status(400).json({
+        success: false,
+        message: "Bio cannot exceed 500 characters"
+      });
+    }
+
     const user = await User.findByIdAndUpdate(
       req.user.id,
       fieldsToUpdate,
@@ -304,28 +404,72 @@ exports.updatePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
 
+    // Validate input
     if (!currentPassword || !newPassword) {
       return res.status(400).json({
         success: false,
-        message: "Please provide current and new password"
+        message: "Current and new password are required"
+      });
+    }
+
+    // Validate password strength (min 8 chars, at least one number and one special char)
+    if (newPassword.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: "New password must be at least 8 characters long"
+      });
+    }
+
+    if (!/[0-9]/.test(newPassword)) {
+      return res.status(400).json({
+        success: false,
+        message: "New password must contain at least one number"
+      });
+    }
+
+    // Check if new password is same as current
+    if (currentPassword === newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "New password must be different from current password"
       });
     }
 
     // Get user with password
     const user = await User.findById(req.user.id).select("+password");
 
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
     // Check current password
     const isMatch = await user.comparePassword(currentPassword);
 
     if (!isMatch) {
+      await AuditLog.log({
+        userId: req.user.id,
+        action: "update",
+        resource: "User",
+        resourceId: user._id,
+        resourceName: user.name,
+        status: "failure",
+        errorMessage: "Invalid current password during password change",
+        ipAddress: req.ip,
+        userAgent: req.get("user-agent")
+      });
+
       return res.status(401).json({
         success: false,
         message: "Current password is incorrect"
       });
     }
 
-    // Update password
+    // Update password and track change
     user.password = newPassword;
+    user.passwordChangedAt = new Date();
     await user.save();
 
     // Log the password change
@@ -338,6 +482,7 @@ exports.updatePassword = async (req, res) => {
       changes: {
         fields: ["password"]
       },
+      status: "success",
       ipAddress: req.ip,
       userAgent: req.get("user-agent")
     });
@@ -347,14 +492,14 @@ exports.updatePassword = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Password updated successfully",
+      message: "Password updated successfully. Please login again with your new password.",
       token
     });
   } catch (error) {
     console.error("Update password error:", error);
     res.status(500).json({
       success: false,
-      message: "Failed to update password"
+      message: "An error occurred while updating password"
     });
   }
 };
