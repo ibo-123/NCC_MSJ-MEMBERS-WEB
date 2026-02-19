@@ -37,15 +37,74 @@ export default function CoursesPage() {
     }
   };
 
+  const validateCourseForm = () => {
+    const errors: string[] = [];
+    
+    if (!form.title.trim()) {
+      errors.push("Course title is required");
+    } else if (form.title.trim().length < 3) {
+      errors.push("Course title must be at least 3 characters");
+    }
+    
+    if (!form.instructor.trim()) {
+      errors.push("Instructor name is required");
+    }
+    
+    if (!form.description.trim()) {
+      errors.push("Course description is required");
+    } else if (form.description.trim().length < 10) {
+      errors.push("Description must be at least 10 characters");
+    }
+    
+    if (form.youtubelink && form.youtubelink.trim()) {
+      const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube|youtu|youtube-nocookie)\.(com|be)\//;
+      if (!youtubeRegex.test(form.youtubelink)) {
+        errors.push("Please provide a valid YouTube URL");
+      }
+    }
+    
+    return errors;
+  };
+
   const addCourse = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const validationErrors = validateCourseForm();
+    if (validationErrors.length > 0) {
+      const errorMessage = validationErrors.join(". ");
+      alert("Validation Error:\n" + errorMessage);
+      return;
+    }
+    
     try {
       await API.post("/courses", form);
+      
+      // Success feedback
+      const successEl = document.createElement('div');
+      successEl.className = "fixed top-4 right-4 bg-green-500/10 border border-green-500/30 rounded-lg p-4 flex items-center gap-3 z-50 animate-in fade-in";
+      successEl.innerHTML = `
+        <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+        </svg>
+        <p class="text-green-400 text-sm font-medium">Course added successfully!</p>
+      `;
+      document.body.appendChild(successEl);
+      setTimeout(() => successEl.remove(), 3000);
+      
       setForm({ title: "", instructor: "", description: "", youtubelink: "" });
       loadCourses();
       setIsModalOpen(false);
-    } catch (error) {
-      console.error("Error adding course:", error);
+    } catch (error: any) {
+      console.error("[v0] Error adding course:", error);
+      
+      let errorMessage = "Failed to add course. Please try again.";
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message === "Network Error") {
+        errorMessage = "Network error. Please check your connection.";
+      }
+      
+      alert("Error: " + errorMessage);
     }
   };
 

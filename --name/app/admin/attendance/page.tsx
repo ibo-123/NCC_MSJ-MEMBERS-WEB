@@ -164,21 +164,68 @@ export default function AttendancePage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.user || !form.event) {
-      alert("Please select both user and event");
+    
+    // Validation
+    const errors: string[] = [];
+    if (!form.user) errors.push("Please select a member");
+    if (!form.event) errors.push("Please select an event");
+    if (!form.status) errors.push("Please select attendance status");
+    
+    if (errors.length > 0) {
+      const errorMessage = errors.join(". ");
+      const errorEl = document.createElement('div');
+      errorEl.className = "fixed top-4 right-4 bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-center gap-3 z-50 animate-in fade-in";
+      errorEl.innerHTML = `
+        <svg class="w-5 h-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+        </svg>
+        <p class="text-red-400 text-sm font-medium">${errorMessage}</p>
+      `;
+      document.body.appendChild(errorEl);
+      setTimeout(() => errorEl.remove(), 4000);
       return;
     }
 
     setIsSubmitting(true);
     try {
       await API.post("/attendance", form);
-      alert("✅ Attendance marked successfully!");
+      
+      // Success notification
+      const successEl = document.createElement('div');
+      successEl.className = "fixed top-4 right-4 bg-green-500/10 border border-green-500/30 rounded-lg p-4 flex items-center gap-3 z-50 animate-in fade-in";
+      successEl.innerHTML = `
+        <svg class="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+        </svg>
+        <p class="text-green-400 text-sm font-medium">Attendance marked successfully!</p>
+      `;
+      document.body.appendChild(successEl);
+      setTimeout(() => successEl.remove(), 3000);
+      
       // Reset form
       setForm({ user: "", event: "", status: "present" });
       // Refresh recent attendance
       fetchRecentAttendance();
     } catch (err: any) {
-      alert(err.response?.data?.message || "Failed to mark attendance");
+      console.error("[v0] Attendance error:", err);
+      
+      let errorMessage = "Failed to mark attendance. Please try again.";
+      if (err.response?.status === 409) {
+        errorMessage = "This attendance record already exists.";
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+      
+      const errorEl = document.createElement('div');
+      errorEl.className = "fixed top-4 right-4 bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-center gap-3 z-50 animate-in fade-in max-w-sm";
+      errorEl.innerHTML = `
+        <svg class="w-5 h-5 text-red-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+        </svg>
+        <p class="text-red-400 text-sm font-medium">${errorMessage}</p>
+      `;
+      document.body.appendChild(errorEl);
+      setTimeout(() => errorEl.remove(), 5000);
     } finally {
       setIsSubmitting(false);
     }

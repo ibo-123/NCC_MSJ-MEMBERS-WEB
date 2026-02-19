@@ -4,6 +4,21 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 import ProtectedRoute from "@/components/UI/protectedRoutes";
 
 // Types
@@ -33,6 +48,42 @@ interface Event {
   location: string;
   attendees: number;
 }
+
+// Chart data for visualizations
+const attendanceTrendData = [
+  { day: "Mon", attendance: 75 },
+  { day: "Tue", attendance: 82 },
+  { day: "Wed", attendance: 78 },
+  { day: "Thu", attendance: 85 },
+  { day: "Fri", attendance: 88 },
+  { day: "Sat", attendance: 72 },
+];
+
+const memberGrowthData = [
+  { month: "Jan", members: 150 },
+  { month: "Feb", members: 175 },
+  { month: "Mar", members: 198 },
+  { month: "Apr", members: 220 },
+  { month: "May", members: 235 },
+  { month: "Jun", members: 250 },
+];
+
+const categoryDistributionData = [
+  { name: "Sports", value: 35 },
+  { name: "Academic", value: 28 },
+  { name: "Leadership", value: 22 },
+  { name: "Cultural", value: 15 },
+];
+
+const courseProgressData = [
+  { course: "Basic Training", progress: 85 },
+  { course: "Advanced Tactics", progress: 72 },
+  { course: "Leadership", progress: 68 },
+  { course: "Weapons", progress: 91 },
+  { course: "Field Ops", progress: 55 },
+];
+
+const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444"];
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -398,11 +449,135 @@ export default function DashboardPage() {
             </motion.div>
           </div>
 
-          {/* Stats Overview */}
+          {/* Charts Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
+            className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6"
+          >
+            {/* Member Growth Chart */}
+            <div className="bg-gray-900/70 backdrop-blur-sm border border-green-900/30 rounded-2xl p-6">
+              <h3 className="text-lg font-bold text-white mb-4">
+                Member Growth Trend
+              </h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={memberGrowthData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="month" stroke="#9ca3af" />
+                  <YAxis stroke="#9ca3af" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#1f2937",
+                      border: "1px solid #4b5563",
+                      borderRadius: "8px",
+                    }}
+                    labelStyle={{ color: "#ffffff" }}
+                  />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="members"
+                    stroke="#10b981"
+                    strokeWidth={2}
+                    dot={{ fill: "#10b981", r: 5 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Attendance Trend */}
+            <div className="bg-gray-900/70 backdrop-blur-sm border border-green-900/30 rounded-2xl p-6">
+              <h3 className="text-lg font-bold text-white mb-4">
+                Weekly Attendance
+              </h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={attendanceTrendData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis dataKey="day" stroke="#9ca3af" />
+                  <YAxis stroke="#9ca3af" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#1f2937",
+                      border: "1px solid #4b5563",
+                      borderRadius: "8px",
+                    }}
+                    labelStyle={{ color: "#ffffff" }}
+                  />
+                  <Bar dataKey="attendance" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Achievement Categories */}
+            <div className="bg-gray-900/70 backdrop-blur-sm border border-green-900/30 rounded-2xl p-6">
+              <h3 className="text-lg font-bold text-white mb-4">
+                Achievement Categories
+              </h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={categoryDistributionData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, value }) => `${name}: ${value}`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {categoryDistributionData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#1f2937",
+                      border: "1px solid #4b5563",
+                      borderRadius: "8px",
+                    }}
+                    labelStyle={{ color: "#ffffff" }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Course Progress */}
+            <div className="bg-gray-900/70 backdrop-blur-sm border border-green-900/30 rounded-2xl p-6">
+              <h3 className="text-lg font-bold text-white mb-4">
+                Course Completion Progress
+              </h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={courseProgressData}
+                  layout="vertical"
+                  margin={{ top: 5, right: 30, left: 150, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <XAxis type="number" stroke="#9ca3af" />
+                  <YAxis dataKey="course" type="category" width={145} stroke="#9ca3af" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#1f2937",
+                      border: "1px solid #4b5563",
+                      borderRadius: "8px",
+                    }}
+                    labelStyle={{ color: "#ffffff" }}
+                  />
+                  <Bar dataKey="progress" fill="#f59e0b" radius={[0, 8, 8, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </motion.div>
+
+          {/* Stats Overview */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
             className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6"
           >
             {/* Attendance Rate */}

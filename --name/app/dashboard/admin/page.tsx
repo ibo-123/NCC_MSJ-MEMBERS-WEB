@@ -4,6 +4,20 @@
 import { useState, useEffect } from "react";
 import API from "@/lib/api";
 import Link from "next/link";
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 import ProtectedRoute from "@/components/UI/protectedRoutes";
 
 export default function AdminDashboard() {
@@ -179,28 +193,42 @@ export default function AdminDashboard() {
 
           {/* Charts Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            {/* Attendance Trend */}
+            {/* Attendance Trend - Enhanced */}
             <div className="bg-gray-900/70 border border-green-900/30 rounded-2xl p-6">
               <h2 className="text-xl font-bold text-white mb-4">
                 Attendance Trend
               </h2>
-              <div className="h-64 flex items-end justify-between">
-                {charts?.attendanceTrend?.slice(0, 7).map((item, i) => (
-                  <div key={i} className="flex flex-col items-center w-1/7">
-                    <div
-                      className="w-full bg-gradient-to-t from-green-600 to-emerald-400 rounded-t-lg"
-                      style={{
-                        height: `${item.rate}px`,
-                        maxHeight: "180px",
-                        minHeight: "20px",
+              {charts?.attendanceTrend && (
+                <ResponsiveContainer width="100%" height={250}>
+                  <AreaChart
+                    data={charts.attendanceTrend.slice(0, 7).map((item) => ({
+                      date: new Date(item.date).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                      }),
+                      rate: item.rate,
+                    }))}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis dataKey="date" stroke="#9ca3af" />
+                    <YAxis stroke="#9ca3af" />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#1f2937",
+                        border: "1px solid #4b5563",
+                        borderRadius: "8px",
                       }}
+                      labelStyle={{ color: "#ffffff" }}
                     />
-                    <span className="text-xs text-gray-400 mt-2">
-                      {new Date(item.date).getDate()}
-                    </span>
-                  </div>
-                ))}
-              </div>
+                    <Area
+                      type="monotone"
+                      dataKey="rate"
+                      stroke="#10b981"
+                      fill="#10b98133"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
             </div>
 
             {/* User Distribution */}
@@ -208,24 +236,24 @@ export default function AdminDashboard() {
               <h2 className="text-xl font-bold text-white mb-4">
                 Users by Department
               </h2>
-              <div className="space-y-4">
-                {charts?.userDepartments?.map((dept, i) => (
-                  <div key={i}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-300">{dept._id}</span>
-                      <span className="text-green-400">{dept.count} users</span>
-                    </div>
-                    <div className="w-full bg-gray-800 rounded-full h-2">
-                      <div
-                        className="bg-gradient-to-r from-green-600 to-emerald-400 h-2 rounded-full"
-                        style={{
-                          width: `${(dept.count / overview?.users?.total) * 100}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {charts?.userDepartments && (
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={charts.userDepartments}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis dataKey="_id" stroke="#9ca3af" />
+                    <YAxis stroke="#9ca3af" />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#1f2937",
+                        border: "1px solid #4b5563",
+                        borderRadius: "8px",
+                      }}
+                      labelStyle={{ color: "#ffffff" }}
+                    />
+                    <Bar dataKey="count" fill="#10b981" radius={[8, 8, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
 

@@ -50,7 +50,7 @@ export default function Register() {
     setError(null);
 
     try {
-      await API.post("/auth/register", {
+      const response = await API.post("/auth/register", {
         name: data.name,
         email: data.email,
         password: data.password,
@@ -59,11 +59,47 @@ export default function Register() {
         department: data.department,
       });
 
-      alert("Registration successful! Please login with your credentials.");
-      router.push("/login");
+      if (response.data.data?.token || response.status === 201 || response.status === 200) {
+        // Show success message with better feedback
+        const successEl = document.createElement('div');
+        successEl.className = "fixed top-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-green-500/10 border border-green-500/30 rounded-lg p-4 flex items-center gap-3 z-50 animate-in fade-in slide-in-from-top-4 duration-300";
+        successEl.innerHTML = `
+          <svg class="w-5 h-5 text-green-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+          </svg>
+          <div>
+            <p class="text-green-400 font-medium text-sm">Registration successful!</p>
+            <p class="text-green-300 text-xs">Redirecting to login...</p>
+          </div>
+        `;
+        document.body.appendChild(successEl);
+        
+        setTimeout(() => {
+          successEl.remove();
+          router.push("/login");
+        }, 2000);
+      } else {
+        throw new Error("Unexpected response from server");
+      }
     } catch (err: any) {
-      const errorMessage =
-        err.response?.data?.message || "Registration failed. Please try again.";
+      console.error("[v0] Registration error:", err);
+      
+      let errorMessage = "Registration failed. Please try again.";
+      
+      if (err.response?.status === 409) {
+        errorMessage = "This email or student ID is already registered.";
+      } else if (err.response?.status === 400) {
+        errorMessage = err.response.data?.message || "Invalid registration data. Please check your inputs.";
+      } else if (err.response?.status === 429) {
+        errorMessage = "Too many registration attempts. Please try again later.";
+      } else if (err.response?.status === 500) {
+        errorMessage = "Server error. Please try again later.";
+      } else if (err.message === "Network Error") {
+        errorMessage = "Network error. Please check your connection.";
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+      
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -71,15 +107,15 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-black to-gray-900 p-4 py-12">
-      <div className="w-full max-w-2xl">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 py-8 sm:px-6 lg:px-8 safe-area-inset">
+      <div className="w-full max-w-md sm:max-w-lg">
         {/* Back to Home Link */}
         <Link
           href="/"
-          className="inline-flex items-center text-green-400 hover:text-green-300 mb-8 transition-colors"
+          className="inline-flex items-center gap-2 text-primary hover:text-primary/80 mb-8 transition-colors text-sm font-medium"
         >
           <svg
-            className="w-4 h-4 mr-2"
+            className="w-4 h-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -95,26 +131,26 @@ export default function Register() {
         </Link>
 
         {/* Register Card */}
-        <div className="bg-gray-900/70 backdrop-blur-sm border border-green-900/30 rounded-2xl p-8 shadow-2xl">
+        <div className="ncc-card-elevated p-8">
           {/* Logo and Header */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-900/30 to-emerald-800/30 rounded-full mb-4 border border-green-700/30">
-              <span className="text-2xl font-bold text-green-400">NCC</span>
+            <div className="inline-flex items-center justify-center w-14 h-14 bg-primary text-primary-foreground rounded-lg mb-4 font-bold text-xl">
+              NCC
             </div>
-            <h1 className="text-3xl font-bold text-white mb-2">
-              Join NCC_MSJ Platform
+            <h1 className="text-2xl font-bold text-foreground mb-2">
+              Create Your Account
             </h1>
-            <p className="text-gray-400">
-              Create your account to access all platform features
+            <p className="text-muted-foreground text-sm">
+              Join the NCC MSJ community
             </p>
           </div>
 
           {/* Error Message */}
           {error && (
-            <div className="mb-6 p-4 bg-red-900/20 border border-red-700/30 rounded-lg">
-              <div className="flex items-center">
+            <div className="mb-6 p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
+              <div className="flex items-center gap-2">
                 <svg
-                  className="w-5 h-5 text-red-400 mr-2"
+                  className="w-5 h-5 text-destructive flex-shrink-0"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -124,7 +160,7 @@ export default function Register() {
                     clipRule="evenodd"
                   />
                 </svg>
-                <span className="text-red-300">{error}</span>
+                <span className="text-destructive text-sm">{error}</span>
               </div>
             </div>
           )}

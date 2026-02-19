@@ -17,6 +17,9 @@ import {
   AlertCircle,
 } from "lucide-react";
 import API from "@/lib/api";
+import { StatCard } from "@/components/UI/StatCard";
+import { ActivityItem } from "@/components/UI/ActivityItem";
+import { StatusItem } from "@/components/UI/StatusItem";
 
 interface DashboardStats {
   totalUsers: number;
@@ -198,28 +201,21 @@ export default function AdminPanel() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-white shadow">
-        <div className="px-6 py-4">
+      <div className="bg-card border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold text-foreground">
                 Admin Dashboard
               </h1>
-              <p className="text-gray-600">Welcome back, Administrator</p>
+              <p className="text-muted-foreground text-sm mt-1">Manage platform resources</p>
             </div>
-            <div className="flex items-center space-x-4">
-              <button className="relative p-2 text-gray-600 hover:text-gray-900">
+            <div className="flex items-center gap-4">
+              <button className="relative p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted">
                 <Bell className="h-5 w-5" />
-                <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
-              </button>
-              <button className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-lg">
-                <UserCircle className="h-8 w-8 text-gray-600" />
-                <div className="text-left">
-                  <p className="text-sm font-medium">Admin User</p>
-                  <p className="text-xs text-gray-500">Administrator</p>
-                </div>
+                <span className="absolute top-1 right-1 h-2 w-2 bg-destructive rounded-full"></span>
               </button>
             </div>
           </div>
@@ -227,42 +223,19 @@ export default function AdminPanel() {
       </div>
 
       {/* Main Content */}
-      <div className="px-6 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {statCards.map((card, index) => (
-            <Link
+            <StatCard
               key={index}
-              href={card.link}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">
-                    {card.title}
-                  </p>
-                  {loading ? (
-                    <div className="h-8 w-16 bg-gray-200 rounded animate-pulse mt-2"></div>
-                  ) : (
-                    <p className="text-3xl font-bold text-gray-900 mt-2">
-                      {card.value}
-                    </p>
-                  )}
-                  <div className="flex items-center mt-2">
-                    <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-                    <span className="text-sm text-green-600">
-                      {card.change}
-                    </span>
-                    <span className="text-sm text-gray-500 ml-2">
-                      from last month
-                    </span>
-                  </div>
-                </div>
-                <div className={`${card.color} p-3 rounded-lg`}>
-                  <div className="text-white">{card.icon}</div>
-                </div>
-              </div>
-            </Link>
+              title={card.title}
+              value={loading ? "..." : card.value}
+              change={card.change}
+              icon={card.icon}
+              link={card.link}
+              trend="up"
+            />
           ))}
         </div>
 
@@ -270,34 +243,28 @@ export default function AdminPanel() {
           {/* Left Column - Quick Actions & Upcoming Events */}
           <div className="lg:col-span-2 space-y-8">
             {/* Quick Actions */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="ncc-card-elevated p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold text-foreground">
                   Quick Actions
                 </h2>
-                <Link
-                  href="/admin"
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                >
-                  View all →
-                </Link>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {quickActions.map((action, index) => (
                   <Link
                     key={index}
                     href={action.link}
-                    className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-sm transition-all group"
+                    className="ncc-card p-4 hover:shadow-md transition-all group"
                   >
-                    <div className="flex items-start space-x-4">
-                      <div className={`${action.color} p-2 rounded-lg`}>
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-lg bg-primary/10 text-primary flex-shrink-0 group-hover:bg-primary/20 transition-colors">
                         {action.icon}
                       </div>
-                      <div className="flex-1">
-                        <h3 className="font-medium text-gray-900 group-hover:text-blue-600">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-foreground group-hover:text-primary transition-colors">
                           {action.title}
                         </h3>
-                        <p className="text-sm text-gray-500 mt-1">
+                        <p className="text-sm text-muted-foreground mt-1">
                           {action.description}
                         </p>
                       </div>
@@ -308,37 +275,21 @@ export default function AdminPanel() {
             </div>
 
             {/* Recent Activities */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold text-gray-900">
+            <div className="ncc-card-elevated">
+              <div className="flex items-center justify-between p-6 border-b border-border">
+                <h2 className="text-lg font-semibold text-foreground">
                   Recent Activities
                 </h2>
-                <Link
-                  href="/admin/activities"
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                >
-                  View all →
-                </Link>
               </div>
-              <div className="space-y-4">
+              <div className="divide-y divide-border">
                 {recentActivities.map((activity) => (
-                  <div
+                  <ActivityItem
                     key={activity.id}
-                    className="flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg"
-                  >
-                    <div className={`${activity.color} p-2 rounded-lg`}>
-                      <div className="text-white">{activity.icon}</div>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">
-                        {activity.action}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        by {activity.user}
-                      </p>
-                    </div>
-                    <div className="text-xs text-gray-400">{activity.time}</div>
-                  </div>
+                    icon={activity.icon}
+                    action={activity.action}
+                    user={activity.user}
+                    time={activity.time}
+                  />
                 ))}
               </div>
             </div>
@@ -347,94 +298,49 @@ export default function AdminPanel() {
           {/* Right Column - Upcoming Events & System Status */}
           <div className="space-y-8">
             {/* Upcoming Events */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="ncc-card-elevated p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold text-foreground">
                   Upcoming Events
                 </h2>
-                <Link
-                  href="/admin/events"
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                >
-                  View all →
-                </Link>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {upcomingEvents.map((event) => (
                   <div
                     key={event.id}
-                    className="border-l-4 border-blue-500 pl-4 py-2 hover:bg-gray-50 rounded-r"
+                    className="ncc-card p-4 border-l-4 border-l-primary hover:shadow-md transition-all"
                   >
-                    <h3 className="font-medium text-gray-900">{event.title}</h3>
-                    <div className="flex items-center text-sm text-gray-500 mt-1">
-                      <Clock className="h-3 w-3 mr-1" />
+                    <h3 className="font-medium text-foreground">{event.title}</h3>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
+                      <Clock className="h-4 w-4" />
                       {event.date}
                     </div>
-                    <span className="inline-block mt-2 px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
-                      {event.type}
-                    </span>
+                    <div className="mt-3">
+                      <span className="ncc-badge-primary text-xs">
+                        {event.type}
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>
               <Link
                 href="/admin/events?action=create"
-                className="mt-6 w-full flex items-center justify-center px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50"
+                className="ncc-btn-secondary w-full mt-6"
               >
                 + Add New Event
               </Link>
             </div>
 
             {/* System Status */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-6">
+            <div className="ncc-card-elevated p-6">
+              <h2 className="text-lg font-semibold text-foreground mb-6">
                 System Status
               </h2>
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                    <span className="text-gray-700">Database</span>
-                  </div>
-                  <span className="text-sm font-medium text-green-600">
-                    Online
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                    <span className="text-gray-700">Authentication</span>
-                  </div>
-                  <span className="text-sm font-medium text-green-600">
-                    Active
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <AlertCircle className="h-5 w-5 text-yellow-500 mr-3" />
-                    <span className="text-gray-700">Storage</span>
-                  </div>
-                  <span className="text-sm font-medium text-yellow-600">
-                    85% used
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-                    <span className="text-gray-700">API Services</span>
-                  </div>
-                  <span className="text-sm font-medium text-green-600">
-                    Normal
-                  </span>
-                </div>
-              </div>
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <Link
-                  href="/admin/settings"
-                  className="flex items-center justify-center space-x-2 text-gray-600 hover:text-gray-900"
-                >
-                  <Settings className="h-4 w-4" />
-                  <span className="text-sm font-medium">System Settings</span>
-                </Link>
+                <StatusItem label="Database" status="Online" isHealthy />
+                <StatusItem label="Authentication" status="Active" isHealthy />
+                <StatusItem label="Storage" status="85% used" isHealthy={false} />
+                <StatusItem label="API Services" status="Normal" isHealthy />
               </div>
             </div>
           </div>
@@ -442,30 +348,28 @@ export default function AdminPanel() {
 
         {/* Admin Modules Grid */}
         <div className="mt-12">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">
+          <h2 className="text-xl font-bold text-foreground mb-6">
             Admin Modules
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Users Module */}
             <Link
               href="/admin/users"
-              className="group bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-blue-300 transition-all"
+              className="group ncc-card-elevated p-6 hover:shadow-lg transition-all"
             >
               <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-blue-100 rounded-lg">
+                <div className="p-3 bg-blue-100/50 rounded-lg group-hover:bg-blue-100 transition-colors">
                   <Users className="h-6 w-6 text-blue-600" />
                 </div>
-                <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                  156 Members
-                </span>
+                <span className="ncc-badge-info text-xs">156 Members</span>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 mb-2">
+              <h3 className="text-lg font-semibold text-foreground group-hover:text-primary mb-2">
                 User Management
               </h3>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-muted-foreground mb-4">
                 Manage NCC members, roles, permissions, and user profiles
               </p>
-              <div className="flex items-center text-sm text-blue-600 font-medium">
+              <div className="flex items-center text-sm text-primary font-medium group-hover:gap-1 transition-all">
                 Manage Users →
               </div>
             </Link>
@@ -473,23 +377,21 @@ export default function AdminPanel() {
             {/* Courses Module */}
             <Link
               href="/admin/courses"
-              className="group bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-purple-300 transition-all"
+              className="group ncc-card-elevated p-6 hover:shadow-lg transition-all"
             >
               <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-purple-100 rounded-lg">
+                <div className="p-3 bg-purple-100/50 rounded-lg group-hover:bg-purple-100 transition-colors">
                   <BookOpen className="h-6 w-6 text-purple-600" />
                 </div>
-                <span className="text-xs font-medium text-purple-600 bg-purple-50 px-2 py-1 rounded">
-                  24 Courses
-                </span>
+                <span className="ncc-badge text-xs bg-purple-100 text-purple-700">24 Courses</span>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 group-hover:text-purple-600 mb-2">
+              <h3 className="text-lg font-semibold text-foreground group-hover:text-primary mb-2">
                 Course Management
               </h3>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-muted-foreground mb-4">
                 Create, organize, and manage learning materials and resources
               </p>
-              <div className="flex items-center text-sm text-purple-600 font-medium">
+              <div className="flex items-center text-sm text-primary font-medium">
                 Manage Courses →
               </div>
             </Link>
@@ -497,23 +399,21 @@ export default function AdminPanel() {
             {/* Attendance Module */}
             <Link
               href="/admin/attendance"
-              className="group bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-green-300 transition-all"
+              className="group ncc-card-elevated p-6 hover:shadow-lg transition-all"
             >
               <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-green-100 rounded-lg">
+                <div className="p-3 bg-green-100/50 rounded-lg group-hover:bg-green-100 transition-colors">
                   <CalendarCheck className="h-6 w-6 text-green-600" />
                 </div>
-                <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded">
-                  89% Today
-                </span>
+                <span className="ncc-badge-success text-xs">89% Today</span>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 group-hover:text-green-600 mb-2">
+              <h3 className="text-lg font-semibold text-foreground group-hover:text-primary mb-2">
                 Attendance System
               </h3>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-muted-foreground mb-4">
                 Track attendance, generate reports, and monitor participation
               </p>
-              <div className="flex items-center text-sm text-green-600 font-medium">
+              <div className="flex items-center text-sm text-primary font-medium">
                 Mark Attendance →
               </div>
             </Link>
@@ -521,23 +421,21 @@ export default function AdminPanel() {
             {/* Achievements Module */}
             <Link
               href="/admin/achievements"
-              className="group bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-yellow-300 transition-all"
+              className="group ncc-card-elevated p-6 hover:shadow-lg transition-all"
             >
               <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-yellow-100 rounded-lg">
+                <div className="p-3 bg-yellow-100/50 rounded-lg group-hover:bg-yellow-100 transition-colors">
                   <Trophy className="h-6 w-6 text-yellow-600" />
                 </div>
-                <span className="text-xs font-medium text-yellow-600 bg-yellow-50 px-2 py-1 rounded">
-                  18 Pending
-                </span>
+                <span className="ncc-badge-warning text-xs">18 Pending</span>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 group-hover:text-yellow-600 mb-2">
+              <h3 className="text-lg font-semibold text-foreground group-hover:text-primary mb-2">
                 Achievements
               </h3>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-muted-foreground mb-4">
                 Manage and verify member achievements and certificates
               </p>
-              <div className="flex items-center text-sm text-yellow-600 font-medium">
+              <div className="flex items-center text-sm text-primary font-medium">
                 View Achievements →
               </div>
             </Link>
@@ -545,23 +443,21 @@ export default function AdminPanel() {
             {/* Events Module */}
             <Link
               href="/admin/events"
-              className="group bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-red-300 transition-all"
+              className="group ncc-card-elevated p-6 hover:shadow-lg transition-all"
             >
               <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-red-100 rounded-lg">
+                <div className="p-3 bg-red-100/50 rounded-lg group-hover:bg-red-100 transition-colors">
                   <CalendarCheck className="h-6 w-6 text-red-600" />
                 </div>
-                <span className="text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded">
-                  7 Upcoming
-                </span>
+                <span className="ncc-badge-danger text-xs">7 Upcoming</span>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 group-hover:text-red-600 mb-2">
+              <h3 className="text-lg font-semibold text-foreground group-hover:text-primary mb-2">
                 Events Management
               </h3>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-muted-foreground mb-4">
                 Schedule, manage, and track NCC events and activities
               </p>
-              <div className="flex items-center text-sm text-red-600 font-medium">
+              <div className="flex items-center text-sm text-primary font-medium">
                 Manage Events →
               </div>
             </Link>
@@ -569,23 +465,21 @@ export default function AdminPanel() {
             {/* Reports Module */}
             <Link
               href="/admin/reports"
-              className="group bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-indigo-300 transition-all"
+              className="group ncc-card-elevated p-6 hover:shadow-lg transition-all"
             >
               <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-indigo-100 rounded-lg">
+                <div className="p-3 bg-indigo-100/50 rounded-lg group-hover:bg-indigo-100 transition-colors">
                   <BarChart3 className="h-6 w-6 text-indigo-600" />
                 </div>
-                <span className="text-xs font-medium text-indigo-600 bg-indigo-50 px-2 py-1 rounded">
-                  Monthly
-                </span>
+                <span className="ncc-badge text-xs bg-indigo-100 text-indigo-700">Monthly</span>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 group-hover:text-indigo-600 mb-2">
+              <h3 className="text-lg font-semibold text-foreground group-hover:text-primary mb-2">
                 Analytics & Reports
               </h3>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-muted-foreground mb-4">
                 View insights, generate reports, and analyze performance
               </p>
-              <div className="flex items-center text-sm text-indigo-600 font-medium">
+              <div className="flex items-center text-sm text-primary font-medium">
                 View Reports →
               </div>
             </Link>
@@ -594,19 +488,21 @@ export default function AdminPanel() {
       </div>
 
       {/* Footer */}
-      <div className="mt-12 px-6 py-4 border-t border-gray-200">
-        <div className="flex flex-col md:flex-row md:items-center justify-between text-sm text-gray-500">
-          <div>NCC Management System v1.0 • Last updated: Today, 10:30 AM</div>
-          <div className="flex items-center space-x-4 mt-2 md:mt-0">
-            <Link href="/admin/support" className="hover:text-gray-700">
-              Support
-            </Link>
-            <Link href="/admin/docs" className="hover:text-gray-700">
-              Documentation
-            </Link>
-            <Link href="/admin/settings" className="hover:text-gray-700">
-              Settings
-            </Link>
+      <div className="mt-12 border-t border-border bg-card">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between text-sm text-muted-foreground">
+            <div>NCC Management System v1.0</div>
+            <div className="flex items-center gap-6 mt-4 md:mt-0">
+              <Link href="/admin/support" className="hover:text-foreground transition-colors">
+                Support
+              </Link>
+              <Link href="/admin/docs" className="hover:text-foreground transition-colors">
+                Documentation
+              </Link>
+              <Link href="/admin/settings" className="hover:text-foreground transition-colors">
+                Settings
+              </Link>
+            </div>
           </div>
         </div>
       </div>

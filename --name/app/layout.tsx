@@ -1,14 +1,26 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/UI/Navbar";
 
 const inter = Inter({ subsets: ["latin"] });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: "#1a1a1a",
+};
+
 export const metadata: Metadata = {
   title: "NCC_MSJ Tech Platform",
   description:
     "Professional system for managing NCC members, attendance, achievements, and courses",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes",
+  icons: {
+    icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' font-weight='bold' fill='%2310b981'>N</text></svg>",
+  },
 };
 
 export default function RootLayout({
@@ -18,53 +30,30 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.className} antialiased`}>
+      <body className={`${inter.className} antialiased bg-background text-foreground`}>
         <Navbar />
-        <main className="min-h-[calc(100vh-64px)]">{children}</main>
-
-        {/* Animated background elements */}
-        <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-          {[...Array(15)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute font-mono text-green-900/10 text-xl animate-pulse"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDuration: `${3 + Math.random() * 5}s`,
-                animationDelay: `${Math.random() * 2}s`,
-              }}
-            >
-              {Math.random() > 0.5 ? "1" : "0"}
-            </div>
-          ))}
-        </div>
+        <main className="min-h-[calc(100vh-64px-140px)]">{children}</main>
 
         {/* Footer */}
-        <footer className="border-t border-green-900/30 bg-gray-900/50 backdrop-blur-sm">
-          <div className="max-w-7xl mx-auto px-4 py-6">
-            <div className="flex flex-col md:flex-row justify-between items-center">
-              <div className="mb-4 md:mb-0">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 bg-gradient-to-br from-green-900/30 to-emerald-800/30 rounded-lg flex items-center justify-center mr-3 border border-green-700/30">
-                    <span className="font-bold text-green-400">NCC</span>
+        <footer className="border-t border-border bg-card backdrop-blur-sm mt-auto">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 bg-primary text-primary-foreground rounded-lg flex items-center justify-center font-bold text-sm">
+                    NCC
                   </div>
-                  <span className="text-lg font-bold text-white">
-                    NCC_MSJ Tech Platform
+                  <span className="font-semibold text-foreground">
+                    NCC MSJ Platform
                   </span>
                 </div>
-                <p className="text-gray-400 text-sm mt-2">
-                  Secure • Professional • Modern
+                <p className="text-muted-foreground text-sm">
+                  Professional club management system
                 </p>
               </div>
 
-              <div className="text-center md:text-right">
-                <p className="text-gray-400 text-sm">
-                  © {new Date().getFullYear()} NCC MSJ. All rights reserved.
-                </p>
-                <p className="text-gray-500 text-xs mt-1">
-                  Version 2.4.1 • Powered by Next.js
-                </p>
+              <div className="text-sm text-muted-foreground">
+                <p>© {new Date().getFullYear()} NCC MSJ. All rights reserved.</p>
               </div>
             </div>
           </div>
